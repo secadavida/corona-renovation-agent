@@ -18,5 +18,9 @@ pip install -r requirements.txt
 ## Run Program
 
 ```sh
+<<<<<<< HEAD
 uvicorn backend.api.main:app --reload
+=======
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+>>>>>>> c2753c7 (se ajusta el README)
 ```
