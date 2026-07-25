@@ -5,51 +5,58 @@
     <button type="button" [class.is-active]="activeTab === 'activity'" (click)="selectTab('activity')">Actividad</button>
   </nav>
 
-  @if (activeTab === 'summary') {
+  @if (!renovationContext.context().space && !renovationContext.context().budget && !renovationContext.context().products.length) {
+    <div class="inspector__empty">
+      <div><i class="ri-sparkling-2-line"></i></div>
+      <h2>Tu proyecto aparecerá aquí</h2>
+      <p>Cuéntale al agente qué espacio quieres renovar, sus medidas o tu presupuesto.</p>
+    </div>
+  } @else if (activeTab === 'summary') {
     <div class="inspector__content">
       <section class="project-card">
         <div class="project-card__eyebrow"><i class="ri-home-5-line"></i> Proyecto activo</div>
-        <h2>Renovación de baño</h2>
-        <p>Una propuesta funcional y duradera para un espacio de 15 m².</p>
-        <div class="project-card__chips"><span>Baño</span><span>3 x 5 m</span><span>15 m²</span></div>
+        <h2>Renovación de {{ renovationContext.context().space?.toLowerCase() || 'espacio' }}</h2>
+        <p>El agente irá construyendo la propuesta con lo que compartas.</p>
+        <div class="project-card__chips">
+          @if (renovationContext.context().space) { <span>{{ renovationContext.context().space }}</span> }
+          @if (renovationContext.context().dimensions) { <span>{{ renovationContext.context().dimensions }}</span> }
+          @if (renovationContext.context().area) { <span>{{ renovationContext.context().area }} m²</span> }
+        </div>
       </section>
 
       <section class="inspector-card">
         <h3>Resumen del espacio</h3>
         <dl class="details-list">
-          <div><dt>Presupuesto</dt><dd>$5.000.000 COP</dd></div>
-          <div><dt>Prioridad</dt><dd>Renovar el piso</dd></div>
-          <div><dt>Estilo sugerido</dt><dd>Neutro y moderno</dd></div>
+          @if (renovationContext.context().budget) { <div><dt>Presupuesto</dt><dd>{{ renovationContext.context().budget | currency:'COP':'symbol-narrow':'1.0-0' }}</dd></div> }
+          @if (renovationContext.context().area) { <div><dt>Área a renovar</dt><dd>{{ renovationContext.context().area }} m²</dd></div> }
+          <div><dt>Estado</dt><dd>En definición</dd></div>
         </dl>
       </section>
 
-      <section class="inspector-card">
+      @if (renovationContext.context().products.length) { <section class="inspector-card">
         <div class="section-heading"><h3>Recomendación actual</h3><span class="status">En catálogo</span></div>
         <article class="recommendation">
           <div class="recommendation__icon"><i class="ri-layout-grid-line"></i></div>
-          <div><strong>Piso Metropoli Gris 60x60</strong><p>Acabado mate para un baño contemporáneo.</p><b>Desde $86.400 COP</b></div>
+          <div><strong>{{ renovationContext.context().products[0].name }}</strong><p>Producto recomendado por el agente.</p><b>{{ renovationContext.context().products[0].price || 'Precio por confirmar' }}</b></div>
         </article>
-        <div class="budget"><div><span>Estimado de productos</span><strong>$2.567.440</strong></div><div class="budget__bar"><span></span></div><small>51% del presupuesto disponible</small></div>
-      </section>
+      </section> }
 
       <section class="inspector-card">
         <h3>Siguientes pasos</h3>
-        <ol class="steps"><li class="is-done">Definir área a cubrir</li><li class="is-done">Establecer presupuesto</li><li class="is-current">Comparar acabados de piso</li><li>Preparar cotización final</li></ol>
+        <ol class="steps"><li [class.is-done]="renovationContext.context().area">Definir área a cubrir</li><li [class.is-done]="renovationContext.context().budget">Establecer presupuesto</li><li [class.is-current]="renovationContext.context().products.length">Comparar acabados de piso</li><li>Preparar cotización final</li></ol>
       </section>
     </div>
   } @else if (activeTab === 'products') {
     <div class="inspector__content">
-      <section class="inspector-card"><h3>Productos sugeridos</h3><p class="card-intro">Selección inicial según tu baño y presupuesto.</p>
-        <article class="product"><i class="ri-layout-grid-line"></i><div><strong>Piso Metropoli Gris</strong><span>60 x 60 cm · Mate</span></div><b>$86.400</b></article>
-        <article class="product"><i class="ri-tools-line"></i><div><strong>Mortero para piso</strong><span>Preparación e instalación</span></div><b>$55.520</b></article>
-        <article class="product"><i class="ri-shower-line"></i><div><strong>Rejilla rectangular</strong><span>Acero inoxidable · 30 cm</span></div><b>$156.900</b></article>
+      <section class="inspector-card"><h3>Productos sugeridos</h3><p class="card-intro">Selección creada por el agente durante la conversación.</p>
+        @for (product of renovationContext.context().products; track product.name) { <article class="product"><i class="ri-layout-grid-line"></i><div><strong>{{ product.name }}</strong><span>Recomendación del catálogo</span></div><b>{{ product.price || 'Por confirmar' }}</b></article> }
       </section>
       <p class="inspector__note"><i class="ri-information-line"></i> Los valores son estimados y no incluyen mano de obra.</p>
     </div>
   } @else {
     <div class="inspector__content">
       <section class="inspector-card"><h3>Actividad del agente</h3>
-        <ul class="activity"><li><i class="ri-check-line"></i><div><strong>Área registrada</strong><span>Baño de 15 m²</span></div></li><li><i class="ri-check-line"></i><div><strong>Presupuesto registrado</strong><span>$5.000.000 COP</span></div></li><li><i class="ri-loader-4-line"></i><div><strong>Buscando combinaciones</strong><span>Pisos y complementos</span></div></li><li><i class="ri-circle-line"></i><div><strong>Cotización final</strong><span>Pendiente de tu elección</span></div></li></ul>
+        <ul class="activity">@for (activity of renovationContext.context().activities; track activity) { <li><i class="ri-check-line"></i><div><strong>{{ activity }}</strong><span>Registrado en la conversación</span></div></li> }</ul>
       </section>
     </div>
   }

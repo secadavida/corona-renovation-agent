@@ -7,6 +7,7 @@ import { UploadProgress } from '../../../features/chat/components/upload-progres
 import { ChatMessage } from '../../../features/chat/models/message.model';
 import { QuickAction } from '../../../features/chat/models/quick-action.model';
 import { ChatService } from '../../../features/chat/services/chat.service';
+import { RenovationContextService } from '../../../features/inspector/renovation-context.service';
 
 @Component({
   selector: 'app-chat-page',
@@ -27,13 +28,20 @@ export class ChatPage {
     { id: 'budget', label: 'Menor presupuesto', value: 'Busco una opción de menor presupuesto.' },
   ];
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly renovationContext: RenovationContextService,
+  ) {}
 
   sendMessage(text: string): void {
     this.messages = [...this.messages, this.createUserMessage(text)];
+    this.renovationContext.recordUserMessage(text);
     this.isTyping = true;
     this.chatService.sendMessage(text).subscribe({
-      next: (response) => (this.messages = [...this.messages, response]),
+      next: (response) => {
+        this.messages = [...this.messages, response];
+        this.renovationContext.recordAssistantMessage(response.content);
+      },
       complete: () => (this.isTyping = false),
       error: () => {
         this.messages = [
