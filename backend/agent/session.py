@@ -34,10 +34,18 @@ class ConversationSession:
         self._trim()
 
     def add_assistant_tool_calls(self, tool_calls: list[dict[str, Any]]) -> None:
-        normalized_calls = [
-            {"id": call["id"], "type": "function", "function": call["function"]}
-            for call in tool_calls
-        ]
+        normalized_calls = []
+        for call in tool_calls:
+            normalized_call = {
+                "id": call["id"],
+                "type": "function",
+                "function": call["function"],
+            }
+            # Gemini requires this opaque value to be preserved verbatim between
+            # a function call and its corresponding tool response.
+            if call.get("extra_content"):
+                normalized_call["extra_content"] = call["extra_content"]
+            normalized_calls.append(normalized_call)
         self.messages.append({"role": "assistant", "content": None, "tool_calls": normalized_calls})
 
     def add_tool_result(self, tool_call_id: str, content: str) -> None:

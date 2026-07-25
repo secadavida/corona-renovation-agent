@@ -36,12 +36,39 @@ class OpenAIProvider(LLMProvider):
         message = response.choices[0].message
         return {
             "content": message.content,
-            "tool_calls": [
-                {"id": call.id, "function": {"name": call.function.name, "arguments": call.function.arguments}}
-                for call in message.tool_calls or []
-            ]
-            or None,
+            "tool_calls": self._serialize_tool_calls(message.tool_calls or []) or None,
         }
+
+    @staticmethod
+    def _serialize_tool_calls(tool_calls: list[Any]) -> list[dict[str, Any]]:
+        """Keep provider-specific metadata required when the call is replayed.
+
+        Gemini's OpenAI-compatible endpoint adds
+        ``extra_content.google.thought_signature`` to a tool call. That value
+        must be sent back unchanged along with the tool result on the next
+        request; dropping it makes Gemini 3 reject the conversation.
+        """
+        serialized_calls: list[dict[str, Any]] = []
+        for call in tool_calls:
+            serialized_call: dict[str, Any] = {
+                "id": call.id,
+                "type": call.type,
+                "function": {
+                    "name": call.function.name,
+                    "arguments": call.function.arguments,
+                },
+            }
+
+            # The OpenAI SDK stores provider extension fields as model extras.
+            extra_content = getattr(call, "extra_content", None)
+            if extra_content is None:
+                model_extra = getattr(call, "model_extra", None) or {}
+                extra_content = model_extra.get("extra_content")
+            if extra_content:
+                serialized_call["extra_content"] = extra_content
+
+            serialized_calls.append(serialized_call)
+        return serialized_calls
 
     async def vision(self, image_url: str, prompt: str, max_tokens: int = 1000) -> str:
         response = await self.client.chat.completions.create(
