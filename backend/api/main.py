@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from cachetools import TTLCache
-from scraper import get_corona_catalog
+from .scraper import get_corona_catalog
 
 app = FastAPI(
     title="Corona.co Catalog API",
