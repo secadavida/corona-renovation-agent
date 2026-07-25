@@ -1,0 +1,4 @@
+<section class="chat-window" aria-label="Conversación con Corona AI">
+  @for (message of messages; track message.id) { <app-chat-message [message]="message"></app-chat-message> }
+  <app-typing-indicator [visible]="typing"></app-typing-indicator>
+</section>

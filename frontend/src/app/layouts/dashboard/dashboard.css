@@ -24,3 +24,9 @@ header{
 
     overflow:hidden;
 }
+
+.dashboard__chat {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}

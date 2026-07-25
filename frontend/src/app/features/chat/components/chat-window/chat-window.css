@@ -1,0 +1,17 @@
+:host {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.chat-window {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.5rem clamp(1rem, 4vw, 4rem);
+}

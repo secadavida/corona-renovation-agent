@@ -1,0 +1,12 @@
+<article class="chat-message" [class.chat-message--user]="message.sender === 'user'">
+  <div class="chat-message__avatar" aria-hidden="true">
+    @if (message.sender === 'assistant') { <i class="ri-ghost-4-fill"></i> } @else { <i class="ri-user-line"></i> }
+  </div>
+  <div class="chat-message__content">
+    @if (message.type === 'image' && message.imageUrl) {
+      <img class="chat-message__image" [src]="message.imageUrl" [alt]="message.content || 'Imagen adjunta'" />
+    }
+    @if (message.content) { <p class="chat-message__bubble">{{ message.content }}</p> }
+    <time class="chat-message__time" [attr.datetime]="message.createdAt.toISOString()">{{ message.createdAt | date: 'shortTime' }}</time>
+  </div>
+</article>
