@@ -1,1 +1,17 @@
-<p>recent-projects-section works!</p>
+<section class="recent">
+  <h3 class="recent__title">RECENT PROJECTS</h3>
+
+  <div class="recent__list">
+    @for (project of projects; track project.id) {
+      <button class="recent__item">
+        <img [src]="project.image" [alt]="project.name" />
+
+        <div>
+          <span>{{ project.name }}</span>
+
+          <small>{{ project.lastOpened }}</small>
+        </div>
+      </button>
+    }
+  </div>
+</section>
