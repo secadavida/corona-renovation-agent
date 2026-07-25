@@ -30,3 +30,19 @@ header{
     min-height: 0;
     overflow: hidden;
 }
+
+.dashboard__inspector {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+@media (max-width: 1180px) {
+    .dashboard { grid-template-columns: 240px 1fr; }
+    .dashboard__inspector { display: none; }
+}
+
+@media (max-width: 760px) {
+    .dashboard { grid-template-columns: 1fr; }
+    .dashboard app-sidebar { display: none; }
+}
