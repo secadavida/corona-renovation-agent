@@ -5,7 +5,7 @@ from backend.core.config import CORS_ORIGINS
 
 app = FastAPI(
     title="Corona.co Catalog API",
-    description="API de catalogo Corona preparada para persistencia en PostgreSQL.",
+    description="API de catálogo Corona preparada para persistencia en PostgreSQL.",
     version="3.0.0",
 )
 
@@ -27,4 +27,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("backend.api.main:app", host="0.0.0.0", port=8000, reload=True)
