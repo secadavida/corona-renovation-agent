@@ -1,11 +1,12 @@
 import logging
 import json
+import re
 from typing import Dict, Any, List
 import httpx
 from bs4 import BeautifulSoup
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-# Configure structured logging
+# Configuración de logs estructurados
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("scraper_service")
 
@@ -23,28 +24,25 @@ HEADERS = {
     retry=retry_if_exception_type((httpx.RequestError, httpx.HTTPStatusError)),
     reraise=True
 )
-async def fetch_html(url: str, params: dict) -> str:
-    """Fetches HTML with automatic retries on network blips or 5xx server errors."""
+async def fetch_html(url: str, params: dict = None) -> str:
+    """Obtiene el HTML de una URL con reintentos automáticos ante fallos de red o errores 5xx."""
     async with httpx.AsyncClient(headers=HEADERS, timeout=12.0, follow_redirects=True) as client:
-        logger.info(f"Fetching URL: {url} with params: {params}")
+        logger.info(f"Fetching URL: {url} con parámetros: {params}")
         response = await client.get(url, params=params)
-        
-        # Raise errors for 4xx or 5xx responses to trigger tenacity retries
         response.raise_for_status()
         return response.text
 
+
 async def get_corona_catalog(query: str = "piso", page: int = 1) -> Dict[str, Any]:
-    """Scrapes and parses SEO JSON-LD product data from Corona.co."""
+    """Extrae y parsea los datos JSON-LD de los productos desde las búsquedas de Corona.co."""
     target_url = f"{BASE_URL}/search/{query}"
-    
-    # Most e-commerce stores use page or _page for pagination query params
     params = {"page": page} if page > 1 else {}
 
     try:
         html_content = await fetch_html(target_url, params)
     except Exception as e:
-        logger.error(f"Failed to fetch data from Corona after retries: {str(e)}")
-        raise RuntimeError(f"Upstream server unreachable: {str(e)}")
+        logger.error(f"Error al obtener datos de Corona tras reintentos: {str(e)}")
+        raise RuntimeError(f"Servidor upstream inalcanzable: {str(e)}")
 
     soup = BeautifulSoup(html_content, "html.parser")
     jsonld_scripts = soup.find_all("script", type="application/ld+json")
@@ -58,7 +56,7 @@ async def get_corona_catalog(query: str = "piso", page: int = 1) -> Dict[str, An
         try:
             data = json.loads(script.string)
             
-            # Locate the ItemList schema
+            # Localizar el esquema ItemList
             if data.get("@type") == "WebPage" and "mainEntity" in data:
                 item_list = data["mainEntity"].get("itemListElement", [])
                 
@@ -85,14 +83,113 @@ async def get_corona_catalog(query: str = "piso", page: int = 1) -> Dict[str, An
                             "rating": float(item["aggregateRating"]["ratingValue"]) if "aggregateRating" in item else None,
                             "review_count": int(item["aggregateRating"]["reviewCount"]) if "aggregateRating" in item else 0
                         })
-                logger.info(f"Successfully extracted {len(products)} products from script tag #{index}")
+                logger.info(f"Se extrajeron exitosamente {len(products)} productos del tag script #{index}")
                 break
                 
         except (json.JSONDecodeError, KeyError, ValueError, TypeError) as e:
-            logger.warning(f"Malformed JSON-LD in script tag #{index}: {str(e)}")
+            logger.warning(f"JSON-LD malformado en tag script #{index}: {str(e)}")
             continue
 
     return {
         "total_results": len(products),
         "products": products
     }
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=8),
+    retry=retry_if_exception_type((httpx.RequestError, httpx.HTTPStatusError)),
+    reraise=True
+)
+async def fetch_product_details(product_url: str) -> Dict[str, Any]:
+    """
+    Extrae especificaciones técnicas, atributos, ventajas y precios de la página
+    de detalle del producto (PDP) en Corona.co.
+    """
+    # Sanitizar URL para asegurar que sea absoluta
+    if not product_url.startswith("http"):
+        product_url = f"{BASE_URL}{product_url}" if product_url.startswith("/") else f"{BASE_URL}/{product_url}"
+
+    async with httpx.AsyncClient(headers=HEADERS, timeout=12.0, follow_redirects=True) as client:
+        logger.info(f"Fetching página de detalle: {product_url}")
+        response = await client.get(product_url)
+        response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # 1. Datos base del producto vía JSON-LD
+    product_data: Dict[str, Any] = {
+        "url": product_url,
+        "sku": "",
+        "title": "",
+        "description": "",
+        "price": 0.0,
+        "currency": "COP",
+        "specifications": {},
+        "attributes": [],
+        "advantages": []
+    }
+
+    for script in soup.find_all("script", type="application/ld+json"):
+        if not script.string:
+            continue
+        try:
+            data = json.loads(script.string)
+            if data.get("@type") == "Product":
+                product_data["sku"] = str(data.get("sku", ""))
+                product_data["title"] = data.get("name", "")
+                product_data["description"] = data.get("description", "")
+                
+                offers = data.get("offers", {})
+                if isinstance(offers, list) and offers:
+                    offers = offers[0]
+                
+                product_data["price"] = float(offers.get("price", 0.0))
+                product_data["currency"] = offers.get("priceCurrency", "COP")
+                break
+        except (json.JSONDecodeError, ValueError, TypeError):
+            continue
+
+    # Título alternativo si el JSON-LD no estaba presente
+    if not product_data["title"]:
+        h1 = soup.find("h1")
+        if h1:
+            product_data["title"] = h1.get_text(strip=True)
+
+    # 2. Extraer tabla de especificaciones
+    spec_table = soup.find("table") or soup.find("div", class_=re.compile(r"spec|atributo", re.I))
+    if spec_table:
+        for row in spec_table.find_all(["tr", "li"]):
+            cols = row.find_all(["td", "th", "span"])
+            if len(cols) >= 2:
+                key = cols[0].get_text(strip=True)
+                val = cols[1].get_text(strip=True)
+                if key and val and key.lower() != "característica":
+                    product_data["specifications"][key] = val
+
+    # Extracción de especificaciones de respaldo (listas de descripción dt/dd)
+    if not product_data["specifications"]:
+        for dl in soup.find_all("dl"):
+            dts = dl.find_all("dt")
+            dds = dl.find_all("dd")
+            for dt, dd in zip(dts, dds):
+                product_data["specifications"][dt.get_text(strip=True)] = dd.get_text(strip=True)
+
+    # 3. Extraer "Atributos Especiales" y "Ventajas"
+    for section in soup.find_all(["div", "section"]):
+        header = section.find(["h2", "h3", "h4", "strong", "span"])
+        if not header:
+            continue
+        
+        header_text = header.get_text(strip=True).lower()
+        if "atributo" in header_text:
+            items = [li.get_text(strip=True) for li in section.find_all("li") if li.get_text(strip=True)]
+            if items:
+                product_data["attributes"] = items
+        elif "ventaja" in header_text:
+            items = [li.get_text(strip=True) for li in section.find_all("li") if li.get_text(strip=True)]
+            if items:
+                product_data["advantages"] = items
+
+    return product_data

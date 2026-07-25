@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Query, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import Dict, List, Optional
 from cachetools import TTLCache
-from .scraper import get_corona_catalog
+from .scraper import get_corona_catalog, fetch_product_details
 
 app = FastAPI(
     title="Corona.co Catalog API",
@@ -11,23 +11,23 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# 1. CORS Configuration
+# 1. Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        # Add production frontend URLs here later
+        # Añadir URLs del frontend de producción aquí más adelante
     ],
     allow_credentials=True,
     allow_methods=["GET"],
     allow_headers=["*"],
 )
 
-# 2. In-Memory Cache: Stores up to 200 unique searches for 15 minutes (900 seconds)
+# 2. Caché en Memoria (TTL): Guarda hasta 200 búsquedas durante 15 minutos (900 segundos)
 catalog_cache = TTLCache(maxsize=200, ttl=900)
 
-# 3. Pydantic Models for Strict Data Contracts
+# 3. Modelos Pydantic para la Validación de Datos
 class ProductModel(BaseModel):
     id: str = Field(..., description="Product SKU")
     title: str = Field(..., description="Display name of the product")
@@ -48,7 +48,22 @@ class CatalogResponseModel(BaseModel):
     total_results: int
     data: List[ProductModel]
 
-# 4. API Routes
+class ProductDetailResponse(BaseModel):
+    url: str
+    sku: Optional[str] = ""
+    title: str
+    description: Optional[str] = ""
+    price: float
+    currency: str = "COP"
+    specifications: Dict[str, str] = Field(
+        default_factory=dict,
+        description="Diccionario con las especificaciones técnicas (ej: Materiales, Formato, M2 por caja)"
+    )
+    attributes: List[str] = Field(default_factory=list, description="Atributos especiales")
+    advantages: List[str] = Field(default_factory=list, description="Ventajas del producto")
+
+
+# 4. Rutas de la API
 @app.get(
     "/api/catalog",
     response_model=CatalogResponseModel,
@@ -62,7 +77,7 @@ async def fetch_catalog_endpoint(
 ):
     cache_key = f"{q.lower().strip()}_page_{page}"
     
-    # Check cache first
+    # Revisar caché primero
     if cache_key in catalog_cache:
         cached_data = catalog_cache[cache_key]
         return {
@@ -74,12 +89,12 @@ async def fetch_catalog_endpoint(
             "data": cached_data
         }
 
-    # Fetch live data if not cached
+    # Obtener datos en vivo si no están en caché
     try:
         raw_result = await get_corona_catalog(query=q, page=page)
         products_list = raw_result.get("products", [])
         
-        # Save to TTL cache
+        # Guardar en caché TTL
         catalog_cache[cache_key] = products_list
         
         return {
@@ -91,7 +106,6 @@ async def fetch_catalog_endpoint(
             "data": products_list
         }
     except RuntimeError as upstream_error:
-        # Triggered when tenacity exhausts all retries
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Target e-commerce server is unavailable or rate-limiting: {str(upstream_error)}"
@@ -102,6 +116,28 @@ async def fetch_catalog_endpoint(
             detail="An unexpected error occurred while processing the catalog data."
         )
 
+@app.get(
+    "/api/product",
+    response_model=ProductDetailResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Obtener detalle y especificaciones de un producto",
+    description="Extrae las especificaciones técnicas, ventajas y atributos de la página de detalle de Corona."
+)
+async def get_product_specifications(
+    url: str = Query(
+        ...,
+        description="URL completa o ruta relativa del producto (ej: /productos/revestimientos/pisos/piso-bhukhara-60x120/p/18193586)"
+    )
+):
+    try:
+        details = await fetch_product_details(product_url=url)
+        return details
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Error obteniendo especificaciones del producto: {str(e)}"
+        )
+
 @app.get("/health", status_code=status.HTTP_200_OK, tags=["System"])
 async def health_check():
     """Simple health check endpoint for uptime monitors."""
@@ -109,4 +145,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
