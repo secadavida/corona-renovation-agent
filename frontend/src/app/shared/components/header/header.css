@@ -1,0 +1,430 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.app-header {
+  width: 100%;
+  height: 76px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 24px;
+
+  position: relative;
+  z-index: 20;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e8ebf1;
+}
+
+
+/* ========================================
+   BRAND
+======================================== */
+
+.brand {
+  min-width: 280px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+}
+
+.brand-icon {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #2563eb;
+
+  font-size: 28px;
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.brand-info h1 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.2;
+
+  letter-spacing: -0.02em;
+}
+
+.brand-info span {
+  color: #8b95a7;
+
+  font-size: 11px;
+  font-weight: 400;
+}
+
+
+/* ========================================
+   PROJECT SELECTOR
+======================================== */
+
+.project-selector-wrapper {
+  position: relative;
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.project-selector {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 10px 14px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #171a21;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  transition: background 0.2s ease;
+}
+
+.project-selector:hover {
+  background: #f7f8fa;
+}
+
+.project-selector i {
+  color: #1f2937;
+
+  font-size: 18px;
+
+  transition: transform 0.2s ease;
+}
+
+.project-selector i.rotated {
+  transform: rotate(180deg);
+}
+
+
+/* ========================================
+   PROJECT DROPDOWN
+======================================== */
+
+.project-menu {
+  width: 280px;
+
+  position: absolute;
+
+  top: calc(100% + 10px);
+  left: 50%;
+
+  padding: 8px;
+
+  transform: translateX(-50%);
+
+  background: #ffffff;
+
+  border: 1px solid #e8ebf1;
+  border-radius: 12px;
+
+  box-shadow:
+    0 16px 40px rgba(15, 23, 42, 0.1);
+
+  animation: dropdown-enter 0.18s ease-out;
+}
+
+@keyframes dropdown-enter {
+  from {
+    opacity: 0;
+
+    transform:
+      translateX(-50%)
+      translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateX(-50%)
+      translateY(0);
+  }
+}
+
+.project-option {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  padding: 11px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+
+  text-align: left;
+
+  transition: background 0.2s ease;
+}
+
+.project-option:hover {
+  background: #f7f9fc;
+}
+
+.project-option > i:first-child {
+  color: #64748b;
+
+  font-size: 19px;
+}
+
+.project-option div {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.project-option strong {
+  color: #1e293b;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.project-option span {
+  color: #94a3b8;
+
+  font-size: 11px;
+}
+
+.project-option .check-icon {
+  color: #2563eb;
+
+  font-size: 17px;
+}
+
+.menu-divider {
+  height: 1px;
+
+  margin: 6px 4px;
+
+  background: #edf0f4;
+}
+
+.new-project-option {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 11px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #2563eb;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  transition: background 0.2s ease;
+}
+
+.new-project-option:hover {
+  background: #eff6ff;
+}
+
+.new-project-option i {
+  font-size: 18px;
+}
+
+
+/* ========================================
+   HEADER ACTIONS
+======================================== */
+
+.header-actions {
+  min-width: 280px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 18px;
+}
+
+.header-action {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+
+  border: none;
+  border-radius: 50%;
+
+  background: transparent;
+
+  color: #1f2937;
+
+  font-size: 19px;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.header-action:hover {
+  background: #f3f5f8;
+
+  color: #2563eb;
+}
+
+.notification-dot {
+  width: 5px;
+  height: 5px;
+
+  position: absolute;
+
+  top: 5px;
+  right: 5px;
+
+  border-radius: 50%;
+
+  background: #2563eb;
+}
+
+
+/* ========================================
+   USER AVATAR
+======================================== */
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+
+  background: #f1f3f6;
+
+  color: #1f2937;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.user-avatar:hover {
+  background: #e8edf5;
+
+  box-shadow: 0 0 0 4px #f4f7fb;
+}
+
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 768px) {
+
+  .app-header {
+    height: 68px;
+
+    padding: 0 16px;
+  }
+
+  .brand {
+    min-width: auto;
+  }
+
+  .brand-info span {
+    display: none;
+  }
+
+  .brand-info h1 {
+    font-size: 14px;
+  }
+
+  .brand-icon {
+    font-size: 24px;
+  }
+
+  .project-selector-wrapper {
+    display: none;
+  }
+
+  .header-actions {
+    min-width: auto;
+
+    gap: 8px;
+  }
+
+  .header-action {
+    width: 32px;
+    height: 32px;
+  }
+
+  .user-avatar {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .brand-info h1 {
+    max-width: 145px;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .header-actions {
+    gap: 3px;
+  }
+
+  .header-action:nth-child(2) {
+    display: none;
+  }
+}

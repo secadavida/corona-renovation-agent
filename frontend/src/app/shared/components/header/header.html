@@ -1,0 +1,81 @@
+<header class="app-header">
+  <!-- BRAND -->
+  <div class="brand">
+    <div class="brand-icon">
+      <i class="ri-ghost-4-fill"></i>
+    </div>
+
+    <div class="brand-info">
+      <h1>Corona Renovation AI</h1>
+      <span>Diseña con inteligencia, renueva mejor.</span>
+    </div>
+  </div>
+
+  <!-- PROJECT SELECTOR -->
+  <div class="project-selector-wrapper">
+    <button class="project-selector" type="button" (click)="toggleProjectMenu()">
+      <span>Mi Apartamento</span>
+
+      <i class="ri-arrow-down-s-line" [class.rotated]="isProjectMenuOpen"></i>
+    </button>
+
+    <!-- DROPDOWN -->
+    @if (isProjectMenuOpen) {
+      <div class="project-menu">
+        <button class="project-option active">
+          <i class="ri-home-4-line"></i>
+
+          <div>
+            <strong>Mi Apartamento</strong>
+            <span>Proyecto actual</span>
+          </div>
+
+          <i class="ri-check-line check-icon"></i>
+        </button>
+
+        <button class="project-option">
+          <i class="ri-building-2-line"></i>
+
+          <div>
+            <strong>Casa de Playa</strong>
+            <span>Proyecto reciente</span>
+          </div>
+        </button>
+
+        <button class="project-option">
+          <i class="ri-building-line"></i>
+
+          <div>
+            <strong>Oficina Central</strong>
+            <span>Proyecto reciente</span>
+          </div>
+        </button>
+
+        <div class="menu-divider"></div>
+
+        <button class="new-project-option">
+          <i class="ri-add-line"></i>
+          Nuevo proyecto
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- HEADER ACTIONS -->
+  <div class="header-actions">
+    <!-- Notifications -->
+    <button class="header-action" type="button" aria-label="Notificaciones">
+      <i class="ri-notification-3-line"></i>
+
+      <span class="notification-dot"></span>
+    </button>
+
+    <!-- Help -->
+    <button class="header-action" type="button" aria-label="Ayuda">
+      <i class="ri-question-line"></i>
+    </button>
+
+    <!-- User -->
+    <button class="user-avatar" type="button" aria-label="Abrir perfil">JD</button>
+  </div>
+</header>
