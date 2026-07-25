@@ -1,0 +1,6 @@
+<div class="chat-input">
+  <textarea #message rows="1" placeholder="Describe tus ideas o sube una foto..." aria-label="Mensaje" (keydown.enter)="$event.preventDefault(); submit(message)"></textarea>
+  <input #imageInput class="chat-input__file" type="file" accept="image/*" (change)="selectImage($event)" />
+  <button class="chat-input__icon" type="button" aria-label="Subir imagen" (click)="imageInput.click()"><i class="ri-image-add-line"></i></button>
+  <button class="chat-input__send" type="button" aria-label="Enviar mensaje" (click)="submit(message)"><i class="ri-send-plane-fill"></i></button>
+</div>

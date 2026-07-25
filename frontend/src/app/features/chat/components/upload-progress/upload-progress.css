@@ -1,0 +1,1 @@
+.upload-progress { height: .3rem; overflow: hidden; border-radius: 999px; background: #e2e8f0; }.upload-progress span { display: block; height: 100%; border-radius: inherit; background: #2873f0; transition: width .2s ease; }

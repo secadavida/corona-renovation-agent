@@ -22,3 +22,6 @@ CORS_ORIGINS = [
 CORONA_BASE_URL = os.getenv("CORONA_BASE_URL", "https://corona.co").rstrip("/")
 HTTP_TIMEOUT_SECONDS = float(os.getenv("HTTP_TIMEOUT_SECONDS", "12"))
 SCRAPER_MAX_RETRIES = int(os.getenv("SCRAPER_MAX_RETRIES", "3"))
+
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai").lower()
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o")
