@@ -102,6 +102,11 @@ export class ChatMessage implements OnChanges {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
 
+    // Only absolute HTTP(S) links are accepted; image URLs come from the catalog.
+    rendered = rendered.replace(
+      /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/gi,
+      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+    );
     rendered = rendered.replace(/`([^`]+)`/g, '<code>$1</code>');
     rendered = rendered.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     rendered = rendered.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
