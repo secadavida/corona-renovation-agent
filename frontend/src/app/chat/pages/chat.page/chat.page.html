@@ -1,0 +1,8 @@
+<section class="chat-page">
+  <app-chat-window [messages]="messages" [typing]="isTyping"></app-chat-window>
+  <app-quick-actions [actions]="quickActions" (actionSelected)="selectQuickAction($event)"></app-quick-actions>
+  <div class="chat-page__composer">
+    <app-chat-input (send)="sendMessage($event)" (imageSelected)="handleImageSelected($event)"></app-chat-input>
+    @if (uploadProgress !== null) { <app-upload-progress [progress]="uploadProgress"></app-upload-progress> }
+  </div>
+</section>
