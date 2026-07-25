@@ -33,12 +33,34 @@ export class ChatMessage implements OnChanges {
       paragraph = [];
     };
 
-    for (const line of lines) {
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index];
       const heading = line.match(/^(#{1,3})\s+(.+)$/);
       const unorderedItem = line.match(/^\s*[-*+]\s+(.+)$/);
       const orderedItem = line.match(/^\s*\d+[.)]\s+(.+)$/);
+      const tableHeader = this.parseTableRow(line);
+      const tableSeparator = lines[index + 1]?.trim();
 
-      if (/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(line)) {
+      if (tableHeader && tableSeparator && this.isTableSeparator(tableSeparator)) {
+        closeParagraph();
+        closeList();
+        const rows: string[] = [];
+        index += 2;
+
+        while (index < lines.length) {
+          const row = this.parseTableRow(lines[index]);
+          if (!row) break;
+          rows.push(`<tr>${row.map((cell) => `<td>${this.renderInline(cell)}</td>`).join('')}</tr>`);
+          index += 1;
+        }
+
+        html.push(
+          `<div class="chat-message__table-wrap"><table><thead><tr>${tableHeader
+            .map((cell) => `<th scope="col">${this.renderInline(cell)}</th>`)
+            .join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`,
+        );
+        index -= 1;
+      } else if (/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(line)) {
         closeParagraph();
         closeList();
         html.push('<hr>');
@@ -73,6 +95,7 @@ export class ChatMessage implements OnChanges {
   private renderInline(value: string): string {
     // Escape before formatting so model output is always treated as text, never executable HTML.
     let rendered = value
+      .replace(/\s*\(SKU:\s*[^)]+\)/gi, '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -85,5 +108,17 @@ export class ChatMessage implements OnChanges {
     rendered = rendered.replace(/\$([^$]+)\$/g, '<span class="chat-message__math">$1</span>');
     rendered = rendered.replace(/\^([0-9]+)/g, '<sup>$1</sup>');
     return rendered;
+  }
+
+  private parseTableRow(line: string): string[] | null {
+    const value = line.trim();
+    if (!value.includes('|')) return null;
+
+    const cells = value.replace(/^\||\|$/g, '').split('|').map((cell) => cell.trim());
+    return cells.length > 1 ? cells : null;
+  }
+
+  private isTableSeparator(line: string): boolean {
+    return /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(line);
   }
 }
