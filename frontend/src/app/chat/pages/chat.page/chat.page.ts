@@ -35,14 +35,26 @@ export class ChatPage {
     this.chatService.sendMessage(text).subscribe({
       next: (response) => (this.messages = [...this.messages, response]),
       complete: () => (this.isTyping = false),
-      error: () => (this.isTyping = false),
+      error: () => {
+        this.messages = [
+          ...this.messages,
+          {
+            id: crypto.randomUUID(),
+            sender: 'assistant',
+            type: 'text',
+            content: 'No pude contactar al agente de renovación. Verifica que el backend y la configuración de Gemini estén activos.',
+            createdAt: new Date(),
+          },
+        ];
+        this.isTyping = false;
+      },
     });
   }
 
   selectQuickAction(action: QuickAction): void { this.sendMessage(action.value); }
 
   handleImageSelected(file: File): void {
-    // TODO(backend): call ChatService.sendImage(file). The local URL is only a preview; no image is uploaded yet.
+    // El backend actual recibe image_url; la carga de archivos se añadirá cuando exista almacenamiento de imágenes.
     this.uploadProgress = 100;
     this.messages = [...this.messages, { id: crypto.randomUUID(), sender: 'user', type: 'image', content: file.name, imageUrl: URL.createObjectURL(file), createdAt: new Date() }];
     window.setTimeout(() => (this.uploadProgress = null), 450);

@@ -1,31 +1,44 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 
 import { ChatMessage } from '../models/message.model';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
+  private sessionId?: string;
+
+  constructor(private readonly http: HttpClient) {}
+
   sendMessage(message: string): Observable<ChatMessage> {
-    return new Observable<ChatMessage>((subscriber) => {
-      // TODO(backend): replace this timeout with POST /chat using { message }.
-      // The endpoint must return a ChatMessage.
-      const timeoutId = window.setTimeout(() => {
-        subscriber.next({
-          id: crypto.randomUUID(),
-          sender: 'assistant',
-          type: 'text',
-          content: `Entendido. Voy a ayudarte a renovar tu espacio${message ? `: “${message}”` : ''}.`,
-          createdAt: new Date(),
-        });
-        subscriber.complete();
-      }, 800);
+    const payload: AgentChatRequest = { message };
+    if (this.sessionId) {
+      payload.session_id = this.sessionId;
+    }
 
-      return () => window.clearTimeout(timeoutId);
-    });
+    return this.http.post<AgentChatResponse>('/api/agent/chat', payload).pipe(
+      tap(({ session_id }) => (this.sessionId = session_id)),
+      map<AgentChatResponse, ChatMessage>(({ response }) => ({
+        id: crypto.randomUUID(),
+        sender: 'assistant',
+        type: 'text',
+        content: response,
+        createdAt: new Date(),
+      })),
+    );
   }
 
-  /** TODO(backend): implement POST /chat/image with multipart/form-data. */
-  sendImage(_file: File): Observable<ChatMessage> {
-    return new Observable<ChatMessage>((subscriber) => subscriber.complete());
+  startNewConversation(): void {
+    this.sessionId = undefined;
   }
+}
+
+interface AgentChatRequest {
+  message: string;
+  session_id?: string;
+}
+
+interface AgentChatResponse {
+  session_id: string;
+  response: string;
 }
