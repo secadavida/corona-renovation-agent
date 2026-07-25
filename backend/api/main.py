@@ -5,7 +5,7 @@ from backend.core.config import APP_HOST, APP_PORT, CORS_ORIGINS
 
 app = FastAPI(
     title="Corona.co Catalog API",
-    description="API de catalogo Corona preparada para persistencia en PostgreSQL.",
+    description="API de catálogo Corona preparada para persistencia en PostgreSQL.",
     version="3.0.0",
 )
 
