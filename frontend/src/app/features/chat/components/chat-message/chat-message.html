@@ -6,7 +6,13 @@
     @if (message.type === 'image' && message.imageUrl) {
       <img class="chat-message__image" [src]="message.imageUrl" [alt]="message.content || 'Imagen adjunta'" />
     }
-    @if (message.content) { <p class="chat-message__bubble">{{ message.content }}</p> }
+    @if (message.content) {
+      @if (message.sender === 'assistant') {
+        <div class="chat-message__bubble chat-message__markdown" [innerHTML]="formattedContent"></div>
+      } @else {
+        <p class="chat-message__bubble">{{ message.content }}</p>
+      }
+    }
     <time class="chat-message__time" [attr.datetime]="message.createdAt.toISOString()">{{ message.createdAt | date: 'shortTime' }}</time>
   </div>
 </article>
