@@ -8,10 +8,11 @@ from backend.models.product import Product
 class ProductService:
     """Encapsulates product persistence independently from HTTP routes."""
 
-    def upsert_from_catalog(self, db: Session, data: dict[str, Any]) -> Product:
+    def upsert_from_catalog(self, db: Session, data: dict[str, Any]) -> tuple[Product, bool]:
         """Create or update a product identified by the source SKU."""
         product = db.query(Product).filter_by(external_id=data["id"]).one_or_none()
-        if product is None:
+        created = product is None
+        if created:
             product = Product(
                 external_id=data["id"],
                 title=data["title"],
@@ -31,4 +32,4 @@ class ProductService:
         product.rating = data.get("rating")
         product.review_count = data.get("review_count", 0)
         db.flush()
-        return product
+        return product, created

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api.routes.catalog import catalog_service, router as catalog_router
-from backend.core.config import CORS_ORIGINS
+from backend.core.config import APP_HOST, APP_PORT, CORS_ORIGINS
 
 app = FastAPI(
     title="Corona.co Catalog API",
@@ -27,4 +27,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("backend.api.main:app", host=APP_HOST, port=APP_PORT, reload=True)

@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
-from backend.schemas.product import CatalogResponse, ProductDetail
+from backend.db.session import get_db
+from backend.schemas.product import CatalogImportResponse, CatalogResponse, ProductDetail
 from backend.services.catalog_service import CatalogService
 
 
@@ -45,4 +48,25 @@ async def get_product_specifications(
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Error obteniendo especificaciones del producto: {error}",
+        ) from error
+
+
+@router.post("/catalog/import", response_model=CatalogImportResponse, status_code=status.HTTP_200_OK)
+async def import_catalog(
+    q: str = Query("piso", min_length=2, max_length=50, description="Termino de busqueda a sincronizar"),
+    max_pages: int = Query(100, ge=1, le=500, description="Limite de seguridad de paginas a recorrer"),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Scrape and persist every available catalog page for a search query."""
+    try:
+        return await catalog_service.import_all_pages(db, q, max_pages)
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"No fue posible consultar el catalogo de Corona: {error}",
+        ) from error
+    except SQLAlchemyError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No fue posible guardar los productos en PostgreSQL.",
         ) from error

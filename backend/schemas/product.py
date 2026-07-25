@@ -39,3 +39,12 @@ class ProductDetail(BaseModel):
     specifications: dict[str, str] = Field(default_factory=dict)
     attributes: list[str] = Field(default_factory=list)
     advantages: list[str] = Field(default_factory=list)
+
+
+class CatalogImportResponse(BaseModel):
+    query: str
+    pages_imported: int
+    created: int
+    updated: int
+    skipped: int
+    stopped_reason: str

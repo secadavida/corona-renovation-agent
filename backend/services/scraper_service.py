@@ -5,12 +5,18 @@ from typing import Dict, Any, List
 import httpx
 from bs4 import BeautifulSoup
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from backend.core.config import (
+    CORONA_BASE_URL,
+    HTTP_TIMEOUT_SECONDS,
+    LOG_LEVEL,
+    SCRAPER_MAX_RETRIES,
+)
 
 # Configuración de logs estructurados
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=LOG_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("scraper_service")
 
-BASE_URL = "https://corona.co"
+BASE_URL = CORONA_BASE_URL
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -19,14 +25,14 @@ HEADERS = {
 }
 
 @retry(
-    stop=stop_after_attempt(3),
+    stop=stop_after_attempt(SCRAPER_MAX_RETRIES),
     wait=wait_exponential(multiplier=1, min=2, max=10),
     retry=retry_if_exception_type((httpx.RequestError, httpx.HTTPStatusError)),
     reraise=True
 )
 async def fetch_html(url: str, params: dict = None) -> str:
     """Obtiene el HTML de una URL con reintentos automáticos ante fallos de red o errores 5xx."""
-    async with httpx.AsyncClient(headers=HEADERS, timeout=12.0, follow_redirects=True) as client:
+    async with httpx.AsyncClient(headers=HEADERS, timeout=HTTP_TIMEOUT_SECONDS, follow_redirects=True) as client:
         logger.info(f"Fetching URL: {url} con parámetros: {params}")
         response = await client.get(url, params=params)
         response.raise_for_status()
@@ -97,7 +103,7 @@ async def get_corona_catalog(query: str = "piso", page: int = 1) -> Dict[str, An
 
 
 @retry(
-    stop=stop_after_attempt(3),
+    stop=stop_after_attempt(SCRAPER_MAX_RETRIES),
     wait=wait_exponential(multiplier=1, min=2, max=8),
     retry=retry_if_exception_type((httpx.RequestError, httpx.HTTPStatusError)),
     reraise=True
@@ -111,7 +117,7 @@ async def fetch_product_details(product_url: str) -> Dict[str, Any]:
     if not product_url.startswith("http"):
         product_url = f"{BASE_URL}{product_url}" if product_url.startswith("/") else f"{BASE_URL}/{product_url}"
 
-    async with httpx.AsyncClient(headers=HEADERS, timeout=12.0, follow_redirects=True) as client:
+    async with httpx.AsyncClient(headers=HEADERS, timeout=HTTP_TIMEOUT_SECONDS, follow_redirects=True) as client:
         logger.info(f"Fetching página de detalle: {product_url}")
         response = await client.get(product_url)
         response.raise_for_status()

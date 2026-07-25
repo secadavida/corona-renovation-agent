@@ -1,3 +1,3 @@
-from backend.schemas.product import CatalogResponse, ProductDetail, ProductSummary
+from backend.schemas.product import CatalogImportResponse, CatalogResponse, ProductDetail, ProductSummary
 
-__all__ = ["CatalogResponse", "ProductDetail", "ProductSummary"]
+__all__ = ["CatalogImportResponse", "CatalogResponse", "ProductDetail", "ProductSummary"]
