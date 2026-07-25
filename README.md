@@ -18,9 +18,17 @@ pip install -r requirements.txt
 ## Run Program
 
 ```sh
-<<<<<<< HEAD
 uvicorn backend.api.main:app --reload
-=======
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
->>>>>>> c2753c7 (se ajusta el README)
 ```
+
+## PostgreSQL
+
+Configura `DATABASE_URL` antes de añadir persistencia. El valor esperado es una URL SQLAlchemy, por ejemplo:
+
+```sh
+export DATABASE_URL="postgresql+psycopg://usuario:contrasena@localhost:5432/corona"
+```
+
+El modelo ORM `backend/models/product.py` representa la tabla `products`. Las migraciones deben gestionarse con Alembic antes de desplegar.
+
+La API se organiza en `api/routes`, los contratos HTTP en `schemas`, el acceso a PostgreSQL en `models` y `db`, y la logica de negocio e integraciones en `services`.
