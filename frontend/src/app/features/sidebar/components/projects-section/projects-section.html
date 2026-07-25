@@ -1,1 +1,21 @@
-<p>projects-section works!</p>
+<section class="projects">
+  <h3 class="projects__title">PROJECTS</h3>
+
+  <div class="projects__list">
+    @for (project of projects; track project.id) {
+      <button class="project" [class.project--active]="project.selected">
+        <i [class]="project.icon"></i>
+
+        <span>
+          {{ project.name }}
+        </span>
+      </button>
+    }
+  </div>
+
+  <button class="projects__new">
+    <i class="ri-add-line"></i>
+
+    <span> New Project </span>
+  </button>
+</section>

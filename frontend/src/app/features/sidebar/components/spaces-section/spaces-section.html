@@ -1,1 +1,17 @@
-<p>spaces-section works!</p>
+<section class="spaces">
+  <h3 class="spaces__title">SPACES</h3>
+
+  <div class="spaces__list">
+    @for (space of spaces; track space.id) {
+      <button class="space" [class.space--active]="space.selected">
+        <i [class]="space.icon"></i>
+
+        <span>{{ space.name }}</span>
+
+        @if (space.selected) {
+          <div class="space__indicator"></div>
+        }
+      </button>
+    }
+  </div>
+</section>

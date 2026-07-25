@@ -1,0 +1,23 @@
+:host{
+    display:flex;
+    flex-direction:column;
+
+    height:100%;
+
+    padding:20px;
+
+    background:#FFF;
+
+    border-right:1px solid #E5E7EB;
+
+    overflow:hidden; /* <- IMPORTANTE */
+}
+
+.sidebar__separator{
+    height:20px;
+    flex-shrink:0;
+}
+
+.sidebar__spacer{
+    flex:1;
+}
